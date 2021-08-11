@@ -1,5 +1,5 @@
 {
-  "name": "format-number-with-string",
+  "name": "@luxms/format-number-with-string",
   "version": "6.0.0",
   "description": "",
   "main": "index.js",
