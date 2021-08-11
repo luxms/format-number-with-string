@@ -183,14 +183,16 @@ function deconstructNumberFormat(requiredFormat, value) {
     let substringOfstringLeftPart;
     let substringOfstringRightPart;
 
-    if(plusPositionOfPrefix !== -1) {
-        if(plusPositionOfPrefix === 0) {
+    if (plusPositionOfPrefix !== -1) {
+        if (plusPositionOfPrefix === 0) {
             substringOfstring = prefix.slice(1);
             
             if (value > 0) {
-                prefix = '+'+substringOfstring;
-            } else {
-                prefix = '-'+substringOfstring;
+                prefix = '+' + substringOfstring;
+            } else if (value < 0) {
+                prefix = '-' + substringOfstring;
+            } else if (value === 0) {
+                prefix = substringOfstring;
             }
 
         } else {
@@ -199,15 +201,17 @@ function deconstructNumberFormat(requiredFormat, value) {
              
             if (value > 0) {
                 prefix = substringOfstringLeftPart + '+' + substringOfstringRightPart;
-            } else {
-                prefix =  substringOfstringLeftPart + '-' + substringOfstringRightPart;
+            } else if (value < 0) {
+                prefix = substringOfstringLeftPart + '-' + substringOfstringRightPart;
+            } else if (value === 0) {
+                prefix = substringOfstringLeftPart + substringOfstringRightPart;
             }
         }
     }
 
 
-    if(plusPositionOfSuffix !== -1) {
-        if(plusPositionOfSuffix === 0) {
+    if (plusPositionOfSuffix !== -1) {
+        if (plusPositionOfSuffix === 0) {
             substringOfstring = suffix.slice(1);
             
             if (value > 0) {
@@ -223,7 +227,7 @@ function deconstructNumberFormat(requiredFormat, value) {
             if (value > 0) {
                 suffix = substringOfstringLeftPart + '+' + substringOfstringRightPart;
             } else {
-                suffix =  substringOfstringLeftPart + '-' + substringOfstringRightPart;
+                suffix = substringOfstringLeftPart + '-' + substringOfstringRightPart;
             }
         }
     }
@@ -251,7 +255,7 @@ function deconstructNumberFormat(requiredFormat, value) {
     }
 
     return deconstructedFormat;
-};
+}
 
 function formatter(options) {
     options = options || {};
@@ -533,43 +537,40 @@ function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions) 
         padRight: deconstructedFormat.padRight,
         round: deconstructedFormat.maxRight,
         truncate: null
-    })
+    });
 
     return format(value, overrideOptions);
+}
 
-};
 
 function formatNumberWithString(value, requiredFormat, overrideOptions) {
     // custom additionals
-    let fragments = requiredFormat.split(';');
-    let reqFormat = requiredFormat;
-    let valueIsNumber = !isNaN(value);
+    var fragments = requiredFormat.split(';');
+    var reqFormat = requiredFormat;
+    var valueIsNumber = (typeof value === 'number') && !isNaN(value) && isFinite(value);
 
-    if(valueIsNumber && value > 0) {
-        reqFormat = fragments[0] ? fragments[0]: reqFormat;
-    } else if(valueIsNumber && value < 0) {
-        reqFormat = fragments[1] ? fragments[1]: reqFormat;
-    } else if(valueIsNumber && value === 0) {
-        return fragments[2] ? fragments[2]: '0'
+    if (valueIsNumber && value > 0) {
+        reqFormat = fragments[0];
+    } else if (valueIsNumber && value < 0) {
+        reqFormat = fragments.length > 1 ? fragments[1] : fragments[0];
+    } else if (valueIsNumber && value === 0) {
+        reqFormat = fragments.length > 2 ? fragments[2] : fragments[0];
     } else {
-        return 'NaN'
+        return fragments.length > 3 ? fragments[3] : '-';
     }
 
     let leftSquareBracketPosition = reqFormat.indexOf('[');
     let rightSquareBracketPosition = reqFormat.indexOf(']');
 
-    if(leftSquareBracketPosition !== -1 && rightSquareBracketPosition !== -1) {
-
+    if (leftSquareBracketPosition !== -1 && rightSquareBracketPosition !== -1) {
         let mathArea = reqFormat.slice(leftSquareBracketPosition, rightSquareBracketPosition + 1);
-
         let mathExpression = mathArea.slice(1, mathArea.length - 1).split(' ').join('');
-
         reqFormat = reqFormat.split(mathArea).join('');
 
         let operand = mathExpression[0];
         let number = Number(mathExpression.slice(1));
 
-        if(!isNaN(number)) {
+        if (!isNaN(number)) {
             switch (operand) {
                 case '/':
                     value = value / number
@@ -581,12 +582,16 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         }
     }
 
-    if(reqFormat.indexOf('△') !== -1) {
+    if (reqFormat.indexOf('△') !== -1) {
       value = Math.ceil(value);
       reqFormat = reqFormat.split('△').join('');
-    }else if (reqFormat.indexOf('▽') !== -1) {
+    } else if (reqFormat.indexOf('▽') !== -1) {
       value = Math.floor(value)
       reqFormat = reqFormat.split('▽').join('');
+    }
+
+    if (reqFormat.indexOf('#') === -1 && reqFormat.indexOf('0') === -1) {                           // no number placeholder in format
+        return reqFormat;
     }
 
     return formatNumberWithStringOriginal(value, reqFormat, overrideOptions);
