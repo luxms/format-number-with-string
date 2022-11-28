@@ -49,7 +49,9 @@ test('test 12', () => {
 });
 
 test('test 13', () => {
+    expect(formatNumberWithString(1, "$ ##;(##);zero")).toBe('$ 1');
     expect(formatNumberWithString(0, "$ ##;(##);zero")).toBe('zero');
+    expect(formatNumberWithString(-1, "$ ##;(##);zero")).toBe('(1)');
 });
 
 test('test 14', () => {
@@ -105,7 +107,7 @@ test('test 25', () => {
 });
 
 test('test 26', () => {
-    expect(formatNumberWithString('h345.98', "#")).toBe('NaN');
+    expect(formatNumberWithString('h345.98', "#")).toBe('-');
 });
 
 test('test 27', () => {

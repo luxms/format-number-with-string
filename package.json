@@ -1,6 +1,6 @@
 {
-  "name": "format-number-with-string",
-  "version": "1.0.0",
+  "name": "@luxms/format-number-with-string",
+  "version": "6.0.0",
   "description": "",
   "main": "index.js",
   "directories": {
@@ -11,6 +11,10 @@
   },
   "author": "",
   "license": "ISC",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://download.luxms.com/repository/npm-luxms/"
+  },
   "devDependencies": {
     "jest": "^26.6.3"
   }
