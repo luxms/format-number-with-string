@@ -42,6 +42,10 @@
 ###### Now the number can be rounded up or down with special utf characters '△' '▽'
 
 ```
-   eg: formatNumberWithStringExtended(334.234, "#△") returns "+335"
-   eg: formatNumberWithStringExtended(334.234, "#▽") returns "-334"
+   eg: formatNumberWithStringExtended(334.281, "△ #") returns "335"
+   eg: formatNumberWithStringExtended(334.281, "△ #.00") returns "334.29"
+   
+   eg: formatNumberWithStringExtended(334.281, "▽ #") returns "334"
+   eg: formatNumberWithStringExtended(334.281, "▽ #.00") returns "334.28"
+    
 ```

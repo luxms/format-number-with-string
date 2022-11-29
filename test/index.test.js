@@ -68,21 +68,24 @@ test('test 15', () => {
 
 // Округление вниз
 
-// test('test 16', () => {
-//     expect(formatNumberWithString(3345.826, "▽ ###.00").toString).toBe('3345.82');
-// });
+test('test 16', () => {
+    expect(formatNumberWithString(3345.826, "▽ ###.00").toString()).toBe('3345.82');
+    expect(formatNumberWithString(3345.826, "▽ ###").toString()).toBe('3345');
+});
 
 // Округление вверх
-//
-// test('test 17', () => {
-//     expect(formatNumberWithString(3345.826, "△ ###.00").toString).toBe('3345.83');
-// });
+
+test('test 17', () => {
+    expect(formatNumberWithString(3345.826, "△ ###.00").toString()).toBe('3345.83');
+    expect(formatNumberWithString(3345.826, "△ ###").toString()).toBe('3346');
+});
 
 // Округление c префиксом
 
-// test('test 18', () => {
-//     expect(formatNumberWithString(3345.826, "▽ $ ###.00").toString).toBe('$ 3345.83');
-// });
+test('test 18', () => {
+    expect(formatNumberWithString(3345.826, "▽ $ ###.00").toString()).toBe('$ 3345.82');
+    expect(formatNumberWithString(3345.826, "▽ $ ###").toString()).toBe('$ 3345');
+});
 
 // Деление на число
 

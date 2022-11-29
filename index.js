@@ -319,7 +319,7 @@ function formatter(options) {
     options.padLeft = options.padLeft || -1 //default no padding
     options.padRight = options.padRight || -1 //default no padding
 
-    function format(number, overrideOptions) {
+    function format(number, overrideOptions, rounding) {
         overrideOptions = overrideOptions || {};
 
         if (number || number === 0) {
@@ -352,7 +352,7 @@ function formatter(options) {
 
         //Format core number
         number = number.split('.');
-        if (options.round != null) round(number, options.round);
+        if (options.round != null) round(number, options.round, rounding);
         if (options.truncate != null) number[1] = truncate(number[1], options.truncate);
         if (options.padLeft > 0) number[0] = padLeft(number[0], options.padLeft);
         if (options.padRight > 0) number[1] = padRight(number[1], options.padRight);
@@ -502,12 +502,12 @@ function truncate(x, length) {
 }
 
 //where number is an array with 0th item as integer string and 1st item as decimal string (no negatives)
-function round(number, places) {
+function round(number, places, rounding) {
     if (number[1] && places >= 0 && number[1].length > places) {
         //truncate to correct number of decimal places
         var decim = number[1].slice(0, places);
         //if next digit was >= 5 we need to round up
-        if (+(number[1].substr(places, 1)) >= 5) {
+        if ((+(number[1].substr(places, 1)) >= 5 && rounding !== 'down') || rounding === 'up') {
             //But first count leading zeros as converting to a number will loose them
             var leadingzeros = "";
             while (decim.charAt(0)==="0") {
@@ -523,12 +523,13 @@ function round(number, places) {
                 decim = decim.substring(1);   //ignore the 1st char at the beginning which is the carry to the integer part
             }
         }
+
         number[1] = decim;
     }
     return number;
 }
 
-function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions) {
+function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, rounding) {
 
     var deconstructedFormat = []
 
@@ -557,7 +558,7 @@ function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions) 
         truncate: null
     });
 
-    return format(value, overrideOptions);
+    return format(value, overrideOptions, rounding);
 }
 
 
@@ -706,11 +707,13 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         } else reqFormat = reqFormat.split(_bracket.body).join('');
     })
 
+    var rounding = '';
+
     if (reqFormat.indexOf('△') !== -1) {
-        value = Math.ceil(value);
+        rounding = 'up';
         reqFormat = reqFormat.split('△').join('');
     } else if (reqFormat.indexOf('▽') !== -1) {
-        value = Math.floor(value)
+        rounding = 'down';
         reqFormat = reqFormat.split('▽').join('');
     }
 
@@ -718,7 +721,7 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         return reqFormat;
     }
 
-    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions);
+    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions, rounding);
 }
 
 module.exports = formatNumberWithString;
