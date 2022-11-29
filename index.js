@@ -176,7 +176,7 @@ function deconstructNumberFormat(requiredFormat, value) {
 
     // custom additionals - makes '+' sign something like a variable
 
-    let plusPositionOfPrefix = prefix.indexOf('+');    
+    let plusPositionOfPrefix = prefix.indexOf('+');
     let plusPositionOfSuffix = suffix.indexOf('+');
 
     let substringOfstring;
@@ -186,7 +186,7 @@ function deconstructNumberFormat(requiredFormat, value) {
     if (plusPositionOfPrefix !== -1) {
         if (plusPositionOfPrefix === 0) {
             substringOfstring = prefix.slice(1);
-            
+
             if (value > 0) {
                 prefix = '+' + substringOfstring;
             } else if (value < 0) {
@@ -196,9 +196,9 @@ function deconstructNumberFormat(requiredFormat, value) {
             }
 
         } else {
-            substringOfstringLeftPart = prefix.slice(0, plusPositionOfPrefix); 
+            substringOfstringLeftPart = prefix.slice(0, plusPositionOfPrefix);
             substringOfstringRightPart = prefix.slice(plusPositionOfPrefix + 1);
-             
+
             if (value > 0) {
                 prefix = substringOfstringLeftPart + '+' + substringOfstringRightPart;
             } else if (value < 0) {
@@ -213,7 +213,7 @@ function deconstructNumberFormat(requiredFormat, value) {
     if (plusPositionOfSuffix !== -1) {
         if (plusPositionOfSuffix === 0) {
             substringOfstring = suffix.slice(1);
-            
+
             if (value > 0) {
                 suffix = '+'+substringOfstring;
             } else {
@@ -221,9 +221,9 @@ function deconstructNumberFormat(requiredFormat, value) {
             }
 
         } else {
-            substringOfstringLeftPart = suffix.slice(0, plusPositionOfSuffix); 
+            substringOfstringLeftPart = suffix.slice(0, plusPositionOfSuffix);
             substringOfstringRightPart = suffix.slice(plusPositionOfSuffix + 1);
-             
+
             if (value > 0) {
                 suffix = substringOfstringLeftPart + '+' + substringOfstringRightPart;
             } else {
@@ -319,7 +319,7 @@ function formatter(options) {
     options.padLeft = options.padLeft || -1 //default no padding
     options.padRight = options.padRight || -1 //default no padding
 
-    function format(number, overrideOptions) {
+    function format(number, overrideOptions, rounding) {
         overrideOptions = overrideOptions || {};
 
         if (number || number === 0) {
@@ -330,47 +330,65 @@ function formatter(options) {
 
         //identify a negative number and make it absolute
         var output = [];
+        var value = [];
+        var prefix = [];
+        var suffix = [];
         var negative = number.charAt(0) === '-';
         number = number.replace(/^\-/g, '');
 
         //Prepare output with left hand negative and/or prefix
         if (!options.negativeLeftOut && !overrideOptions.noUnits) {
             output.push(options.prefix);
+            prefix.push(options.prefix);
         }
         if (negative) {
             output.push(options.negativeLeftSymbol);
+            value.push(options.negativeLeftSymbol);
         }
         if (options.negativeLeftOut && !overrideOptions.noUnits) {
             output.push(options.prefix);
+            prefix.push(options.prefix);
         }
 
         //Format core number
         number = number.split('.');
-        if (options.round != null) round(number, options.round);
+        if (options.round != null) round(number, options.round, rounding);
         if (options.truncate != null) number[1] = truncate(number[1], options.truncate);
         if (options.padLeft > 0) number[0] = padLeft(number[0], options.padLeft);
         if (options.padRight > 0) number[1] = padRight(number[1], options.padRight);
         if (!overrideOptions.noSeparator && number[1]) number[1] = addDecimalSeparators(number[1], options.decimalsSeparator);
         if (!overrideOptions.noSeparator && number[0]) number[0] = addIntegerSeparators(number[0], options.integerSeparator);
         output.push(number[0]);
+        value.push(number[0]);
         if (number[1]) {
             output.push(options.decimal);
             output.push(number[1]);
+            value.push(options.decimal);
+            value.push(number[1]);
         }
 
         //Prepare output with right hand negative and/or prefix
         if (options.negativeRightOut && !overrideOptions.noUnits) {
             output.push(options.suffix);
+            suffix.push(options.suffix);
         }
         if (negative) {
             output.push(options.negativeRightSymbol);
+            value.push(options.negativeRightSymbol);
         }
         if (!options.negativeRightOut && !overrideOptions.noUnits) {
             output.push(options.suffix);
+            suffix.push(options.suffix);
         }
 
         //join output and return
-        return output.join('');
+        const result = new String(output.join(''));
+
+        result.value = value.join('');
+        result.prefix = prefix.join('');
+        result.suffix = suffix.join('');
+
+        return result;
     }
 
     format.negative = options.negative;
@@ -484,12 +502,12 @@ function truncate(x, length) {
 }
 
 //where number is an array with 0th item as integer string and 1st item as decimal string (no negatives)
-function round(number, places) {
+function round(number, places, rounding) {
     if (number[1] && places >= 0 && number[1].length > places) {
         //truncate to correct number of decimal places
         var decim = number[1].slice(0, places);
         //if next digit was >= 5 we need to round up
-        if (+(number[1].substr(places, 1)) >= 5) {
+        if ((+(number[1].substr(places, 1)) >= 5 && rounding !== 'down') || rounding === 'up') {
             //But first count leading zeros as converting to a number will loose them
             var leadingzeros = "";
             while (decim.charAt(0)==="0") {
@@ -505,12 +523,13 @@ function round(number, places) {
                 decim = decim.substring(1);   //ignore the 1st char at the beginning which is the carry to the integer part
             }
         }
+
         number[1] = decim;
     }
     return number;
 }
 
-function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions) {
+function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, rounding) {
 
     var deconstructedFormat = []
 
@@ -539,15 +558,54 @@ function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions) 
         truncate: null
     });
 
-    return format(value, overrideOptions);
+    return format(value, overrideOptions, rounding);
 }
 
+
+function getBracketsFromString(string) {
+    var arr = string.split('');
+    var bracketsOpened = false;
+    var brackets = [];
+    var i = 0;
+
+    for (i; i < arr.length; i++) {
+        if (arr[i] === '[' && bracketsOpened) continue
+        if (arr[i] === ']' && !bracketsOpened) continue
+        if (arr[i] === '[') {
+            bracketsOpened = true;
+            brackets.push({ headIndex: i, tailIndex: null, body: null });
+            continue
+        }
+        if (arr[i] === ']') {
+            bracketsOpened = false;
+            var currentObjIdx = brackets.findIndex(o => o.tailIndex === null);
+            brackets[currentObjIdx].tailIndex = i;
+            brackets[currentObjIdx].body = string.slice(brackets[currentObjIdx].headIndex, i + 1);
+            continue
+        }
+    }
+
+    return brackets;
+}
+
+function isMathExpression(string, operands) {
+    var operandIndex = null;
+    operands.forEach(op => { if (operandIndex == null && string.indexOf(op) !== -1) operandIndex = string.indexOf(op) });
+    var tail = operandIndex !== null ? string.slice(operandIndex + 1).trim() : NaN;
+    return (typeof +tail === 'number') && !isNaN(tail) && isFinite(tail);
+}
+
+function isClassesOfNumber(string, rowRates) {
+    return string.split(',').some(tmp => rowRates.includes(tmp.toLowerCase()));
+}
 
 function formatNumberWithString(value, requiredFormat, overrideOptions) {
     // custom additionals
     var fragments = requiredFormat.split(';');
     var reqFormat = requiredFormat;
     var valueIsNumber = (typeof value === 'number') && !isNaN(value) && isFinite(value);
+    var operands = ['/', '*', '+', '-'];
+    var rowRates = ['тыс', 'млн', 'млрд', 'тера'];
 
     if (valueIsNumber && value > 0) {
         reqFormat = fragments[0];
@@ -559,42 +617,111 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         return fragments.length > 3 ? fragments[3] : '-';
     }
 
-    let leftSquareBracketPosition = reqFormat.indexOf('[');
-    let rightSquareBracketPosition = reqFormat.indexOf(']');
+    var thousand = 1 * Math.pow(10, 3);
+    var million = 1 * Math.pow(10, 6);
+    var billion = 1 * Math.pow(10, 9);
+    var trillion = 1 * Math.pow(10, 12);
+    var brackets = getBracketsFromString(reqFormat);
 
-    if (leftSquareBracketPosition !== -1 && rightSquareBracketPosition !== -1) {
-        let mathArea = reqFormat.slice(leftSquareBracketPosition, rightSquareBracketPosition + 1);
-        let mathExpression = mathArea.slice(1, mathArea.length - 1).split(' ').join('');
-        reqFormat = reqFormat.split(mathArea).join('');
+    brackets.forEach((bracket, idx) => {
+        var _bracket = getBracketsFromString(reqFormat).find(brck => bracket.body === brck.body); // пересчитывает индексы на которых теперь распологаются скобки
+        var _content = _bracket.body.slice(1, _bracket.body.length - 1); // беру только содержимое без скобок
 
-        let operand = mathExpression[0];
-        let number = Number(mathExpression.slice(1));
 
-        if (!isNaN(number)) {
-            switch (operand) {
+        if (isMathExpression(_content, operands)) {
+            reqFormat = reqFormat.split(_bracket.body).join('');
+            var _operandIndex = null;
+            operands.forEach(opr => { if (_content.indexOf(opr) !== -1) _operandIndex = _content.indexOf(opr) });
+            var _operand = _content[_operandIndex];
+            var _number = Number(_content.slice(_operandIndex + 1).trim());
+            value = Number(value);
+
+            switch (_operand) {
                 case '/':
-                    value = value / number
+                    value = value / _number
                     break
                 case '*':
-                    value = value * number
+                    value = value * _number
+                    break
+                case '+':
+                    value = value + _number
+                    break
+                case '-':
+                    value = value - _number
                     break
             }
-        }
-    }
+
+        } else if (isClassesOfNumber(_content, rowRates)) {
+            var _reqFormatHead = '';
+            var _reqFormatTail = '';
+
+            if (_bracket.headIndex === 0) {
+                _reqFormatTail = reqFormat.slice(_bracket.tailIndex + 1)
+            } else if (_bracket.tailIndex === reqFormat.length - 1) {
+                _reqFormatHead = reqFormat.slice(0, _bracket.headIndex)
+            } else {
+                _reqFormatHead = reqFormat.slice(0, _bracket.headIndex)
+                _reqFormatTail = reqFormat.slice(_bracket.tailIndex + 1)
+            }
+
+            reqFormat = reqFormat.split(_bracket.body).join('');
+            var _template = _content.split(' ').join('').split(',');
+
+            var rates = [
+                {
+                    title: 'тыс',
+                    value: thousand,
+                },
+                {
+                    title: 'млн',
+                    value: million,
+                },
+                {
+                    title: 'млрд',
+                    value: billion,
+                },
+                {
+                    title: 'тера',
+                    value: trillion,
+                },
+            ];
+
+            var divider = 1;
+            var matchedRate = null;
+
+            rates.forEach((rate, idx) => {
+                if (Math.abs(value) >= rate.value) {
+                    var _matchedRate = _template.find(tempRate => tempRate.toLowerCase() === rate.title );
+                    if (_matchedRate) {
+                        matchedRate = _matchedRate;
+                        divider = rate.value;
+                    }
+                }
+            })
+
+            if (matchedRate) {
+                value = value / divider;
+                reqFormat = _reqFormatHead + matchedRate + _reqFormatTail;
+            }
+
+        } else reqFormat = reqFormat.split(_bracket.body).join('');
+    })
+
+    var rounding = '';
 
     if (reqFormat.indexOf('△') !== -1) {
-      value = Math.ceil(value);
-      reqFormat = reqFormat.split('△').join('');
+        rounding = 'up';
+        reqFormat = reqFormat.split('△').join('');
     } else if (reqFormat.indexOf('▽') !== -1) {
-      value = Math.floor(value)
-      reqFormat = reqFormat.split('▽').join('');
+        rounding = 'down';
+        reqFormat = reqFormat.split('▽').join('');
     }
 
     if (reqFormat.indexOf('#') === -1 && reqFormat.indexOf('0') === -1) {                           // no number placeholder in format
         return reqFormat;
     }
 
-    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions);
+    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions, rounding);
 }
 
 module.exports = formatNumberWithString;
