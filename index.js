@@ -588,15 +588,18 @@ function getBracketsFromString(string) {
     return brackets;
 }
 
+
 function isMathExpression(string, operands) {
     var operandIndex = null;
-    operands.forEach(op => { if (operandIndex == null && string.indexOf(op) !== -1) operandIndex = string.indexOf(op) });
+    operands.forEach(op => { if (operandIndex == null && string.includes(op)) operandIndex = string.indexOf(op) });
     var tail = operandIndex !== null ? string.slice(operandIndex + 1).trim() : NaN;
     return (typeof +tail === 'number') && !isNaN(tail) && isFinite(tail);
 }
 
-function isClassesOfNumber(string, rowRates) {
-    return string.split(',').some(tmp => rowRates.includes(tmp.toLowerCase()));
+function isWrongExpression(string, operands) {
+    var operandIndex = null;
+    operands.forEach(op => { if (operandIndex == null && string.includes(op)) operandIndex = string.indexOf(op) });
+    return string.slice(0, operandIndex + 1).trim() === string[operandIndex];
 }
 
 function formatNumberWithString(value, requiredFormat, overrideOptions) {
@@ -605,7 +608,8 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
     var reqFormat = requiredFormat;
     var valueIsNumber = (typeof value === 'number') && !isNaN(value) && isFinite(value);
     var operands = ['/', '*', '+', '-'];
-    var rowRates = ['тыс', 'млн', 'млрд', 'тера'];
+    var formattedByRates = false;
+
 
     if (valueIsNumber && value > 0) {
         reqFormat = fragments[0];
@@ -617,10 +621,6 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         return fragments.length > 3 ? fragments[3] : '-';
     }
 
-    var thousand = 1 * Math.pow(10, 3);
-    var million = 1 * Math.pow(10, 6);
-    var billion = 1 * Math.pow(10, 9);
-    var trillion = 1 * Math.pow(10, 12);
     var brackets = getBracketsFromString(reqFormat);
 
     brackets.forEach((bracket, idx) => {
@@ -651,7 +651,9 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
                     break
             }
 
-        } else if (isClassesOfNumber(_content, rowRates)) {
+        } else if (isWrongExpression(_content, operands)) {
+            reqFormat = reqFormat.split(_bracket.body).join('');
+        } else if (!formattedByRates){
             var _reqFormatHead = '';
             var _reqFormatTail = '';
 
@@ -665,45 +667,19 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
             }
 
             reqFormat = reqFormat.split(_bracket.body).join('');
-            var _template = _content.split(' ').join('').split(',');
+            var templates = _content.split(' ').join('').split(',');
 
-            var rates = [
-                {
-                    title: 'тыс',
-                    value: thousand,
-                },
-                {
-                    title: 'млн',
-                    value: million,
-                },
-                {
-                    title: 'млрд',
-                    value: billion,
-                },
-                {
-                    title: 'тера',
-                    value: trillion,
-                },
-            ];
+            var rates = templates.map((tmp, idx) => Math.pow(10, (idx + 1)*3));
+            var itr = rates.length;
 
-            var divider = 1;
-            var matchedRate = null;
-
-            rates.forEach((rate, idx) => {
-                if (Math.abs(value) >= rate.value) {
-                    var _matchedRate = _template.find(tempRate => tempRate.toLowerCase() === rate.title );
-                    if (_matchedRate) {
-                        matchedRate = _matchedRate;
-                        divider = rate.value;
-                    }
+            for (itr; itr >= 0; itr--) {
+                if (Math.abs(value) >= rates[itr - 1] && !!templates[itr - 1]) {
+                    value = value / rates[itr - 1];
+                    reqFormat = _reqFormatHead + templates[itr - 1] + _reqFormatTail;
+                    formattedByRates = true;
+                    return;
                 }
-            })
-
-            if (matchedRate) {
-                value = value / divider;
-                reqFormat = _reqFormatHead + matchedRate + _reqFormatTail;
             }
-
         } else reqFormat = reqFormat.split(_bracket.body).join('');
     })
 
