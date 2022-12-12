@@ -30,10 +30,12 @@
 ###### Now can apply some optional postfixes (the value will be cast according to the optional postfixes)
 
 ```
-   eg: formatNumberWithStringExtended(234443, "# ### [тыс, млн, млрд, тера]") returns "234 тыс"
+   eg: formatNumberWithStringExtended(234443, "# ### [т., млн, млрд, тера]") returns "234 т."
    eg: formatNumberWithStringExtended(460234543, "# ### [тыс, млн, млрд, тера]") returns "460 млн"
-   eg: formatNumberWithStringExtended(205460234543, "# ### [тыс, млн, млрд, тера]") returns "205 млрд"
-   eg: formatNumberWithStringExtended(3205460234543, "# ### [тыс, млн, млрд, тера]") returns "3 тера"
+   eg: formatNumberWithStringExtended(205460234543, "# ### [тыс, млн, МЛРРРДД, тера]") returns "205 МЛРРРДД"
+   eg: formatNumberWithStringExtended(3205460234543, "# ### [тыс, млн, млрд, трлн.]") returns "3 трлн."
+   eg: formatNumberWithStringExtended(3205460234543, "# ### [ , , , трлн.]") returns "3 трлн."
+   eg: formatNumberWithStringExtended(3205460234543, "# ### [, МЛН]") returns "3205460 МЛН"
    eg: formatNumberWithStringExtended(460234543, "# ### [/2][тыс, млн, млрд, тера] красных мячей") returns "230 млн красных мячей"
 
 ```

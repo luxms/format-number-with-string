@@ -152,13 +152,7 @@ test('test 30', () => {
 // Порядок разрядов
 
 test('test 31', () => {
-    expect(formatNumberWithString(460234543, "# ### [млрд, тыс, тера, млн]").toString()).toBe('460 млн');
-});
-
-// Регистр разярдов
-
-test('test 32', () => {
-    expect(formatNumberWithString(460234543, "# ### [тыс, мЛН, млрд, тера]").toString()).toBe('460 мЛН');
+    expect(formatNumberWithString(460234543, "# ### [т., лимонов, млрд., трл]").toString()).toBe('460 лимонов');
 });
 
 // Дополнительные постфиксы
@@ -188,7 +182,7 @@ test('test 37', () => {
 });
 
 test('test 38', () => {
-    expect(formatNumberWithString(460234543, "# ### [  /  sdf2134 ][ * sdfsdf234][ 234kjh][тыс, млн, млрд, тера] красных мячей").toString()).toBe('460 млн красных мячей');
+    expect(formatNumberWithString(460234543, "# ### [  /  sdf2134 ][ * sdfsdf234][sfse234kjh][тыс, млн, млрд, тера] красных мячей").toString()).toBe('460 235 sfse234kjh красных мячей');
 });
 
 test('test 39', () => {
