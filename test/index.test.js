@@ -188,3 +188,12 @@ test('test 38', () => {
 test('test 39', () => {
     expect(formatNumberWithString(460234543, "+# ###.000 [/2][тыс, млн, млрд, тера] красных мячей").toString()).toBe('+230.117 млн красных мячей');
 });
+
+test('test 40', () => {
+    expect(formatNumberWithString('word123', "+ #;(#);zero;str").toString()).toBe('str');
+    expect(formatNumberWithString('word123', "# str").toString()).toBe('- str');
+    expect(formatNumberWithString('word123', "# str").value).toBe('');
+    expect(formatNumberWithString('word123', "#.00").toString()).toBe('-');
+    expect(formatNumberWithString(undefined, "^ # inch").toString()).toBe('^ - inch');
+    expect(formatNumberWithString(null, "^ # inch").toString()).toBe('^ - inch');
+});

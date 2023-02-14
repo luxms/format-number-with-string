@@ -319,7 +319,7 @@ function formatter(options) {
     options.padLeft = options.padLeft || -1 //default no padding
     options.padRight = options.padRight || -1 //default no padding
 
-    function format(number, overrideOptions, rounding) {
+    function format(number, overrideOptions, rounding, originValue) {
         overrideOptions = overrideOptions || {};
 
         if (number || number === 0) {
@@ -358,7 +358,11 @@ function formatter(options) {
         if (options.padRight > 0) number[1] = padRight(number[1], options.padRight);
         if (!overrideOptions.noSeparator && number[1]) number[1] = addDecimalSeparators(number[1], options.decimalsSeparator);
         if (!overrideOptions.noSeparator && number[0]) number[0] = addIntegerSeparators(number[0], options.integerSeparator);
-        output.push(number[0]);
+
+        if (!isFiniteNumber(originValue)) {
+            number = [''];
+            output.push('-');
+        } else output.push(number[0]);
         value.push(number[0]);
         if (number[1]) {
             output.push(options.decimal);
@@ -529,7 +533,7 @@ function round(number, places, rounding) {
     return number;
 }
 
-function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, rounding) {
+function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, rounding, originValue) {
 
     var deconstructedFormat = []
 
@@ -558,7 +562,7 @@ function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, 
         truncate: null
     });
 
-    return format(value, overrideOptions, rounding);
+    return format(value, overrideOptions, rounding, originValue);
 }
 
 
@@ -602,13 +606,18 @@ function isWrongExpression(string, operands) {
     return string.slice(0, operandIndex + 1).trim() === string[operandIndex];
 }
 
+function isFiniteNumber(num) {
+    return (typeof num === 'number') && !isNaN(num) && isFinite(num);
+}
+
 function formatNumberWithString(value, requiredFormat, overrideOptions) {
     // custom additionals
     var fragments = requiredFormat.split(';');
     var reqFormat = requiredFormat;
-    var valueIsNumber = (typeof value === 'number') && !isNaN(value) && isFinite(value);
+    var valueIsNumber = isFiniteNumber(value);
     var operands = ['/', '*', '+', '-'];
     var formattedByRates = false;
+    var originValue = value;
 
 
     if (valueIsNumber && value > 0) {
@@ -618,7 +627,8 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
     } else if (valueIsNumber && value === 0) {
         reqFormat = fragments.length > 2 ? fragments[2] : fragments[0];
     } else {
-        return fragments.length > 3 ? fragments[3] : '-';
+        value = 0;
+        reqFormat = fragments.length > 3 ? fragments[3] : fragments.length > 2 ? fragments[2] : fragments[0];
     }
 
     var brackets = getBracketsFromString(reqFormat);
@@ -697,7 +707,7 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
         return reqFormat;
     }
 
-    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions, rounding);
+    return formatNumberWithStringOriginal(value, reqFormat, overrideOptions, rounding, originValue);
 }
 
 module.exports = formatNumberWithString;
