@@ -2,14 +2,14 @@
 
 #### Сhanges and Additions
 
-###### Now the "+" sign is a variable that guarantees the output in the resulting string of one of the signs (+ or -) if it is not zero
+###### Now the "+" sign is a variable that guarantees the output in the resulting string of one of the signs (+ or -), if number is not zero
 
 ```
    eg: formatNumberWithString(334, "+#").toString() returns "+334"
    eg: formatNumberWithString(-334, "+#").toString() returns "-334"
 ```
 
-###### The conditional split point comma format is now available. If the number is negative the first part of the format will be processed, if negative the second and if 0 the third
+###### The conditional split point comma format is now available. If the number is positive the first part of the format will be processed, if negative the second and if 0 the third
 
 ```
    eg: formatNumberWithString(334, "+ #;(#);zero").toString() returns "+334"
