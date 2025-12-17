@@ -197,3 +197,30 @@ test('test 40', () => {
     expect(formatNumberWithString(undefined, "^ # inch").toString()).toBe('^ - inch');
     expect(formatNumberWithString(null, "^ # inch").toString()).toBe('^ - inch');
 });
+
+describe('Scientific notation formatting', () => {
+
+  test('scientific notation positive', () => {
+    expect(formatNumberWithString(1e-10, "#.##########").toString()).toBe('0.0000000001');
+  });
+
+  test('scientific notation negative', () => {
+    expect(formatNumberWithString(-1e-10, "-#.##########").toString()).toBe('-0.0000000001');
+  });
+
+  test('scientific notation large number', () => {
+    expect(formatNumberWithString(1.5e+6, "### ###").toString()).toBe('1 500 000');
+  });
+
+  test('scientific notation as string', () => {
+    expect(formatNumberWithString(1e-10, "#.##########").toString()).toBe('0.0000000001');
+  });
+
+  test('scientific notation with formatting', () => {
+    expect(formatNumberWithString(1.2345e-5, "0.00000000").toString()).toBe('0.00001235');
+  });
+
+  test('very small scientific notation', () => {
+    expect(formatNumberWithString(1e-15, "0.################").toString()).toBe('0.000000000000001');
+  });
+});

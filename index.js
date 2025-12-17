@@ -257,6 +257,32 @@ function deconstructNumberFormat(requiredFormat, value) {
     return deconstructedFormat;
 }
 
+// Добавляем функцию для конвертации научной нотации
+function convertScientificNotation(value) {
+    if (typeof value !== 'string') return value;
+
+    const trimmed = value.trim();
+
+    // Проверяем, является ли строка научной нотацией
+    const scientificNotationRegex = /^[+-]?(\d+(\.\d*)?|\.\d+)[eE][+-]?\d+$/;
+    if (!scientificNotationRegex.test(trimmed)) return value;
+
+    const num = parseFloat(trimmed);
+    if (isNaN(num)) return value;
+
+    try {
+        // Преобразуем научную нотацию в число, а затем в строку без экспоненты
+        const absNum = Math.abs(num);
+        // Для очень маленьких чисел используем toFixed с большим количеством знаков
+        if (absNum < 1e-6 || absNum > 1e15) {
+            return num.toFixed(20).replace(/\.?0+$/, '');
+        }
+        return num.toString();
+    } catch (e) {
+        return value;
+    }
+}
+
 function formatter(options) {
     options = options || {};
 
@@ -534,14 +560,16 @@ function round(number, places, rounding) {
 }
 
 function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, rounding, originValue) {
-
-    var deconstructedFormat = []
+    var deconstructedFormat = [];
 
     if (requiredFormat) deconstructedFormat = deconstructNumberFormat(requiredFormat.trim(), value);
 
     value = (value === null ? '' : value);
     value = value + ''; //make a string
     value = value.length ? value.trim() : '';
+
+    // Конвертируем научную нотацию перед дальнейшей обработкой
+    const convertedValue = convertScientificNotation(value);
 
     var options = [];
 
@@ -562,7 +590,8 @@ function formatNumberWithStringOriginal(value, requiredFormat, overrideOptions, 
         truncate: null
     });
 
-    return format(value, overrideOptions, rounding, originValue);
+    // Используем преобразованное значение
+    return format(convertedValue, overrideOptions, rounding, originValue);
 }
 
 
@@ -618,7 +647,6 @@ function formatNumberWithString(value, requiredFormat, overrideOptions) {
     var operands = ['/', '*', '+', '-'];
     var formattedByRates = false;
     var originValue = value;
-
 
     if (valueIsNumber && value > 0) {
         reqFormat = fragments[0];
