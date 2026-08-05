@@ -1,5 +1,7 @@
 # @bi/format-number-with-string
 
+[Русская версия](README.ru.md)
+
 A number formatting library that converts numeric values into human-readable strings using declarative format patterns. Extended fork of [format-number-with-string](https://www.npmjs.com/package/format-number-with-string).
 
 ## Installation
